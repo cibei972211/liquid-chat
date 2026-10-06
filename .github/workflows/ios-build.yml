@@ -20,6 +20,9 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Create platform files
+        run: flutter create . --org com.liquidchat
+
       - name: Install dependencies
         run: flutter pub get
 
