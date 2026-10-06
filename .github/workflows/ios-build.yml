@@ -28,15 +28,29 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build iOS IPA (no codesign)
-        run: flutter build ipa --no-codesign --release
+      - name: Build iOS (no codesign, ignore Flutter team check)
+        run: |
+          flutter build ios --release --no-codesign || true
+          echo "=== Checking build output ==="
+          ls -la build/ios/iphoneos/ 2>/dev/null || echo "iphoneos dir not found"
+          find build -name "Runner.app" -type d 2>/dev/null || echo "Runner.app not found"
 
       - name: Package IPA
         run: |
-          IPA_PATH=$(find build/ios/ipa -name "*.ipa" | head -1)
-          echo "Found IPA at: $IPA_PATH"
-          cp "$IPA_PATH" LiquidChat.ipa
-          ls -lh LiquidChat.ipa
+          APP_PATH="build/ios/iphoneos/Runner.app"
+          if [ -d "$APP_PATH" ]; then
+            echo "Found Runner.app, packaging IPA..."
+            mkdir -p Payload
+            cp -R "$APP_PATH" Payload/
+            zip -r LiquidChat.ipa Payload
+            rm -rf Payload
+            echo "IPA packaged successfully"
+            ls -lh LiquidChat.ipa
+          else
+            echo "ERROR: Runner.app not found"
+            find build -name "*.app" -type d
+            exit 1
+          fi
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
