@@ -1,0 +1,49 @@
+workflows:
+  liquid-chat-ios:
+    name: Liquid Chat iOS Build
+    max_build_duration: 60
+    instance_type: mac_mini_m1
+    environment:
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+      vars:
+        BUNDLE_ID: "com.liquidchat.app"
+    triggering:
+      events:
+        - push
+        - tag
+        - pull_request
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+    scripts:
+      - name: Install Flutter dependencies
+        script: |
+          flutter packages get
+      - name: Set up code signing
+        script: |
+          # 使用自动签名，需要在 Codemagic 环境变量中配置证书
+          # 或者使用 development 签名用于侧载
+          echo "Using automatic code signing"
+      - name: Build IPA
+        script: |
+          flutter build ios --release --no-codesign
+          # 创建未签名 IPA
+          cd build/ios/iphoneos
+          mkdir -p Payload
+          cp -R Runner.app Payload/
+          zip -r LiquidChat.ipa Payload
+          rm -rf Payload
+          echo "IPA built successfully"
+    artifacts:
+      - build/ios/iphoneos/LiquidChat.ipa
+      - build/ios/iphoneos/Runner.app
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com
+        notify:
+          success: true
+          failure: true
