@@ -27,6 +27,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final Uuid _uuid = const Uuid();
 
   late List<Message> _messages;
+  late ChatSession _session;
   bool _isStreaming = false;
   bool _isSending = false;
   StreamSubscription<String>? _streamSub;
@@ -35,6 +36,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _messages = List.from(widget.session.messages);
+    _session = widget.session;
   }
 
   @override
@@ -63,7 +65,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
     // 如果是第一条消息，用它作为会话标题
     if (_messages.where((m) => m.role == MessageRole.user).length == 1) {
-      widget.session.title = text.length > 15 ? '${text.substring(0, 15)}...' : text;
+      _session = _session.copyWith(
+        title: text.length > 15 ? '${text.substring(0, 15)}...' : text,
+      );
     }
 
     _scrollToBottom();
@@ -123,14 +127,16 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _saveSession() async {
-    widget.session.messages = List.from(_messages);
-    widget.session.updatedAt = DateTime.now();
+    _session = _session.copyWith(
+      messages: List.from(_messages),
+      updatedAt: DateTime.now(),
+    );
     final sessions = await _storage.loadSessions();
-    final index = sessions.indexWhere((s) => s.id == widget.session.id);
+    final index = sessions.indexWhere((s) => s.id == _session.id);
     if (index != -1) {
-      sessions[index] = widget.session;
+      sessions[index] = _session;
     } else {
-      sessions.add(widget.session);
+      sessions.add(_session);
     }
     await _storage.saveSessions(sessions);
   }
@@ -213,7 +219,7 @@ class _ChatScreenState extends State<ChatScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.session.title,
+                  _session.title,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,

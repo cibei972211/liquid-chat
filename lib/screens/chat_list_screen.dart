@@ -179,7 +179,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
             style: Theme.of(context).textTheme.bodyMedium,
           ),
         ],
-      ).animate().fadeIn(duration: 500.ms).scale(begin: const Offset(0.9, 0.9));
+      ).animate().fadeIn(duration: 500.ms).scale(begin: const Offset(0.9, 0.9)),
     );
   }
 
