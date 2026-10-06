@@ -24,13 +24,10 @@ jobs:
         run: |
           rm -rf ios
           flutter create . --org com.liquidchat --platforms ios
-          if [ ! -f ios/Podfile ]; then
-            echo "Podfile missing, copying from Flutter SDK template"
-            TMPL=$(find "$FLUTTER_ROOT/packages/flutter_tools/templates" -type f -name Podfile | head -1)
-            cp "$TMPL" ios/Podfile
-          fi
-          test -f ios/Podfile || { echo "ERROR: ios/Podfile still missing"; exit 1; }
-          git checkout -- ios/Runner/Info.plist ios/Runner/AppDelegate.swift
+          # Flutter 3.47+ no longer generates ios/Podfile; restore it (and the
+          # custom app config) from the committed repo files
+          git checkout -- ios/Podfile ios/Runner/Info.plist ios/Runner/AppDelegate.swift
+          test -f ios/Podfile || { echo "ERROR: ios/Podfile missing"; exit 1; }
           ls -la ios
 
       - name: Install dependencies
