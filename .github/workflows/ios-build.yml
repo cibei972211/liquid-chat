@@ -23,13 +23,21 @@ jobs:
       - name: Create platform files
         run: |
           rm -rf ios
-          flutter create . --org com.liquidchat
+          flutter create . --org com.liquidchat --platforms ios
+          if [ ! -f ios/Podfile ]; then
+            echo "Podfile missing, copying from Flutter SDK template"
+            TMPL=$(find "$FLUTTER_ROOT/packages/flutter_tools/templates" -type f -name Podfile | head -1)
+            cp "$TMPL" ios/Podfile
+          fi
+          test -f ios/Podfile || { echo "ERROR: ios/Podfile still missing"; exit 1; }
+          git checkout -- ios/Runner/Info.plist ios/Runner/AppDelegate.swift
+          ls -la ios
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Generate iOS config (including Podfile)
-        run: flutter build ios --release --no-codesign --config-only || true
+      - name: Generate iOS config
+        run: flutter build ios --release --no-codesign --config-only
 
       - name: Pod install
         run: |
